@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="app-title">Project Manager Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <!-- KD Brand Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Play:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================
+           🎨 EASY CUSTOMIZATION SECTION
+           ==========================================
+           Change these values to customize your app:
+        */
+        :root {
+            /* 🏢 COMPANY BRANDING */
+            --app-name: 'KD - Project Management Tool';
+            --company-name: 'Krrisp Digital';
+            --company-tagline: 'AI & Automation Studio';
+
+            /* 🎨 COLOR SCHEME - Change these to match your brand */
+            --primary-color: #F26426;          /* Main brand orange */
+            --primary-dark: #C94E1E;           /* Darker orange for hover effects (manually adjusted) */
+            --secondary-color: #10b981;        /* Kept green for success states */
+            --accent-color: #F6986E;           /* Lighter orange for highlights/attention */
+            --danger-color: #EF4444;           /* Kept red for errors/critical */
+            --background-gradient: linear-gradient(135deg, #F26426 0%, #2A2A2A 100%);
+
+            /* 💰 CURRENCY & LOCALE SETTINGS */
+            --default-currency: '$';         /* Change to €, £, ¥, etc. */
+            --currency-position: 'before';   /* 'before' for $100, 'after' for 100$ */
+
+            /* 📅 DATE FORMAT PREFERENCES */
+            --date-format: 'DD/MM/YYYY';     /* EU format, change to MM/DD/YYYY for US */
+
+            /* 🔧 TECHNICAL COLORS (usually don't need to change) */
+            --light-bg: #FFFFFF;       /* align with KD white */
+            --dark-text: #2A2A2A;      /* KD Dark 2 */
+            --border-color: #e2e8f0;   /* keep neutral */
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* keep standard */
+
+            /* 🖼️ KD Logo Vars */
+            --logo-url: url('https://storage.googleapis.com/msgsndr/TDiIkwElzD5qvid4IlB7/media/689ef64f1ef51bdf9e623e91.png');
+            --logo-height: 50px;
+            --logo-width: auto;
+        }
+
+        /* 
+        📝 LOGO CUSTOMIZATION INSTRUCTIONS:
+        1. Upload your logo to any image hosting service (imgur, your website, etc.)
+        2. Replace the URL in the --logo-url variable below
+        3. Adjust --logo-height if needed (recommended: 40px-60px)
+        4. For best results, use PNG format with transparent background
+        */
+        .logo-container {
+            --logo-url: 'https://storage.googleapis.com/msgsndr/TDiIkwElzD5qvid4IlB7/media/689ef64f1ef51bdf9e623e91.png'; /* Default icon - replace with your logo URL */
+            --logo-height: 45px;
+            --logo-width: auto; /* Keep auto to maintain aspect ratio */
+        }
+
+        /* App-wide styles using the customizable variables */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, sans-serif;
+            background: var(--background-gradient);
+            min-height: 100vh;
+            color: var(--dark-text);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 15px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: var(--logo-width);
+            height: var(--logo-height);
+            background-image: var(--logo-url);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .brand-text h1 {
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .brand-text .tagline {
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        /* Top bar */
+        .top-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .pill {
+            padding: 10px 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 9999px;
+            background: white;
+            font-size: 0.95rem;
+        }
+
+        .primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Navigation Tabs */
+        .nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            padding: 10px 15px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .nav-tab:hover {
+            background: rgba(242, 100, 38, 0.1);
+            color: var(--primary-color);
+        }
+
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Layout */
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        /* KD Typography Overrides */
+        h1, h2, h3, h4 { font-family: 'Play', 'Montserrat', sans-serif; }
+        .tagline { font-family: 'Montserrat', sans-serif; }
+    </style>
+</head>
+<body>
+    <!-- ============================
+         HEADER
+    ============================= -->
+
+    <div class="container">
+        <!-- Header with branding -->
+        <header class="header">
+            <div class="brand-section">
+                <div class="logo"></div>
+                <div class="brand-text">
+                    <h1 id="app-name">Project Manager Pro</h1>
+                    <div class="tagline" id="company-tagline">Professional Project Tracking</div>
+                </div>
+            </div>
+
+            <div class="top-bar">
+                <div class="pill">Local Time: <span id="current-time">--:--</span></div>
+                <div class="pill">Timezone: <select id="timezone-select"></select></div>
+                <button class="pill primary" id="export-btn">Export Report</button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav" id="nav-tabs"></nav>
+
+        <!-- ============================
+             MAIN LAYOUT
+        ============================= -->
+        <div class="layout">
+            <!-- LEFT COLUMN -->
+            <section class="card">
+                <div class="section-title"><strong>Project Overview</strong></div>
+                <canvas id="project-chart" height="120"></canvas>
+            </section>
+
+            <section class="card">
+                <div class="section-title"><strong>Budget Allocation</strong></div>
+                <canvas id="budget-chart" height="120"></canvas>
+            </section>
+
+            <section class="card">
+                <div class="section-title"><strong>Team Utilization</strong></div>
+                <canvas id="utilization-chart" height="200"></canvas>
+            </section>
+
+            <section class="card">
+                <div class="section-title"><strong>Project Timeline</strong></div>
+                <canvas id="timeline-chart" height="200"></canvas>
+            </section>
+        </div>
+
+        <!-- ============================
+             RESOURCE ALLOCATION MATRIX
+        ============================= -->
+        <section class="card" style="margin-top: 20px;">
+            <div class="section-title"><strong>Resource Allocation Matrix</strong></div>
+            <div id="resource-matrix" style="overflow-x: auto; white-space: nowrap; margin-top: 10px;"></div>
+        </section>
+
+        <!-- ============================
+             DEPENDENCY VISUALIZATION
+        ============================= -->
+        <section class="card" style="margin-top: 20px;">
+            <div class="section-title"><strong>Dependencies</strong></div>
+            <div id="dependency-graph" style="height: 320px; border: 1px solid var(--border-color);"></div>
+        </section>
+
+        <!-- ============================
+             FOOTER
+        ============================= -->
+        <footer class="footer">
+            <div>© <span id="year"></span> <span id="company-name">Your Company</span>. All rights reserved.</div>
+        </footer>
+    </div>
+
+    <script>
+        // ===================
+        // COMPANY CONFIG
+        // ===================
+        const COMPANY_CONFIG = {
+            companyName: 'Krrisp Digital',
+            appName: 'KD - Project Management Tool',
+            tagline: 'AI & Automation Studio',
+            currency: '$',
+            currencyPosition: 'before',
+            dateFormat: 'DD/MM/YYYY',
+            defaultTimezone: 'Australia/Sydney'
+        };
+
+        // ===================
+        // TABS
+        // ===================
+        const TABS = [
+            { id: 'dashboard', label: 'Dashboard' },
+            { id: 'projects', label: 'Projects' },
+            { id: 'reports', label: 'Reports' },
+            { id: 'settings', label: 'Settings' }
+        ];
+
+        // Populate header values
+        document.getElementById('company-name').textContent = COMPANY_CONFIG.companyName;
+        document.getElementById('app-name').textContent = COMPANY_CONFIG.appName;
+        document.title = COMPANY_CONFIG.appName;
+        const taglineEl = document.getElementById('company-tagline');
+        if (taglineEl) taglineEl.textContent = COMPANY_CONFIG.tagline;
+
+        // Year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Build tabs
+        const nav = document.getElementById('nav-tabs');
+        TABS.forEach((t, idx) => {
+            const el = document.createElement('button');
+            el.className = 'nav-tab' + (idx === 0 ? ' active' : '');
+            el.textContent = t.label;
+            el.onclick = () => {
+                document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+            nav.appendChild(el);
+        });
+
+        // Timezone select
+        const tzSelect = document.getElementById('timezone-select');
+        const timezones = [
+            'Australia/Sydney','Australia/Melbourne','Australia/Brisbane','Australia/Perth','UTC','America/Los_Angeles','America/New_York','Europe/London','Europe/Berlin','Asia/Singapore'
+        ];
+        timezones.forEach(tz => {
+            const opt = document.createElement('option');
+            opt.value = tz; opt.textContent = tz; tzSelect.appendChild(opt);
+        });
+        tzSelect.value = COMPANY_CONFIG.defaultTimezone;
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateTime, 1000); updateTime();
+
+        // ===================
+        // CHARTS (Chart.js)
+        // ===================
+        function updateProjectChart() {
+            const ctx = document.getElementById('project-chart').getContext('2d');
+            const statusCounts = { ACTIVE: 12, COMPLETED: 7, OVERDUE: 3 };
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Active', 'Completed', 'Overdue'],
+                    datasets: [{
+                        data: [statusCounts.ACTIVE, statusCounts.COMPLETED, statusCounts.OVERDUE],
+                        backgroundColor: ['#10b981', '#F26426', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function updateBudgetChart() {
+            const ctx = document.getElementById('budget-chart').getContext('2d');
+            const budgetData = [
+                { label: 'Q1', budget: 25000 },
+                { label: 'Q2', budget: 42000 },
+                { label: 'Q3', budget: 36000 },
+                { label: 'Q4', budget: 48000 }
+            ];
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: budgetData.map(d => d.label),
+                    datasets: [{
+                        label: 'Budget',
+                        data: budgetData.map(d => d.budget),
+                        backgroundColor: '#F26426'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function updateTimelineChart() {
+            const ctx = document.getElementById('timeline-chart').getContext('2d');
+            const timelineData = [
+                { label: 'Discovery', duration: 10 },
+                { label: 'Design', duration: 20 },
+                { label: 'Build', duration: 30 },
+                { label: 'QA', duration: 12 },
+                { label: 'Launch', duration: 5 }
+            ];
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: timelineData.map(d => d.label),
+                    datasets: [{
+                        label: 'Duration (days)',
+                        data: timelineData.map(d => d.duration),
+                        backgroundColor: '#F26426'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function updateUtilizationChart() {
+            const ctx = document.getElementById('utilization-chart').getContext('2d');
+            const utilizationData = [
+                { name: 'Alice', utilization: 75 },
+                { name: 'Bob', utilization: 92 },
+                { name: 'Carol', utilization: 110 },
+                { name: 'Dan', utilization: 60 }
+            ];
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: utilizationData.map(d => d.name),
+                    datasets: [{
+                        label: 'Utilization %',
+                        data: utilizationData.map(d => d.utilization),
+                        backgroundColor: utilizationData.map(d =>
+                            d.utilization > 100 ? '#ef4444' :
+                            d.utilization > 80  ? '#F6986E' :
+                                                  '#10b981'
+                        )
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 120 } }
+                }
+            });
+        }
+
+        // ===================
+        // RESOURCE MATRIX
+        // ===================
+        function renderResourceMatrix() {
+            const container = document.getElementById('resource-matrix');
+
+            const resources = ['Design', 'Dev', 'QA', 'PM'];
+            const projects = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+
+            let html = '<table><tr><th>Resource</th>' + projects.map(p => `<th>${p}</th>`).join('') + '</tr>';
+            resources.forEach(res => {
+                html += `<tr><td><strong>${res}</strong></td>`;
+                projects.forEach(p => {
+                    const allocation = Math.random() > 0.5 ? Math.floor(Math.random() * 8) : 0;
+                    const cellClass = allocation > 0 ? 'background: rgba(242, 100, 38, 0.1);' : '';
+                    html += `<td style="border: 1px solid #e2e8f0; padding: 12px; text-align: center; ${cellClass}">${allocation}h</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+
+            container.innerHTML = html;
+        }
+
+        // ===================
+        // DEPENDENCY GRAPH (vis-network)
+        // ===================
+        function renderDependencies() {
+            const container = document.getElementById('dependency-graph');
+            const nodes = new vis.DataSet([
+                { id: 1, label: 'Alpha', color: '#F26426' },
+                { id: 2, label: 'Beta', color: '#10b981' },
+                { id: 3, label: 'Gamma', color: '#ef4444' },
+                { id: 4, label: 'Delta', color: '#F26426' }
+            ]);
+            const edges = new vis.DataSet([
+                { from: 1, to: 2 },
+                { from: 2, to: 3 },
+                { from: 3, to: 4 }
+            ]);
+            const network = new vis.Network(container, { nodes, edges }, {
+                nodes: { shape: 'dot', size: 16 },
+                physics: { stabilization: true }
+            });
+        }
+
+        // Init all
+        updateProjectChart();
+        updateBudgetChart();
+        updateTimelineChart();
+        updateUtilizationChart();
+        renderResourceMatrix();
+        renderDependencies();
+    </script>
+</body>
+</html>
