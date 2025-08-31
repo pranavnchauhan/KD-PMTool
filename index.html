@@ -189,20 +189,21 @@
     </div>
   </div>
 
-  <!-- Auth Gate (shown before main app if not logged in) -->
-  <div id="auth">
-    <div class="panel card" style="margin:0 20px">
-      <h3>Sign in to Krrisp Digital PM</h3>
-      <p class="muted">Use your work email or GitHub. You’ll get a one-time login link if using email.</p>
-      <div class="row">
-        <div><label>Email</label><input id="authEmail" type="email" placeholder="you@krrispdigital.com.au"/></div>
-      </div>
-      <div class="row mt12">
-        <button id="btnMagic" class="btn primary">Send Magic Link</button>
-        <button id="btnGitHub" class="btn">Sign in with GitHub</button>
-      </div>
+<!-- Auth Gate (Email + Google only) -->
+<div id="auth">
+  <div class="panel card" style="margin:0 20px">
+    <h3>Sign in to Krrisp Digital PM</h3>
+    <p class="muted">Use your work email for a magic link, or Google.</p>
+    <div class="row">
+      <div><label>Email</label><input id="authEmail" type="email" placeholder="you@krrispdigital.com.au"/></div>
+    </div>
+    <div class="row mt12">
+      <button id="btnMagic" class="btn primary">Send Magic Link</button>
+      <button id="btnGoogle" class="btn">Sign in with Google</button>
     </div>
   </div>
+</div>
+
 
   <!-- Supabase Client & App Logic -->
   <script type="module">
@@ -244,17 +245,28 @@
       else { document.getElementById('auth').style.display=''; document.querySelector('main').style.display='none'; }
     }
 
-    // Auth handlers
-    document.getElementById('btnMagic').onclick=async()=>{
-      const email=document.getElementById('authEmail').value.trim();
-      if(!email) return alert('Enter your email');
-      const { error } = await supa.auth.signInWithOtp({ email });
-      if(error) alert(error.message); else alert('Check your email for a sign-in link');
-    };
-    document.getElementById('btnGitHub').onclick=()=>{
-      supa.auth.signInWithOAuth({ provider:'github', options:{ redirectTo: window.location.origin } });
-    };
-    document.getElementById('btnSignOut').onclick=async()=>{ await supa.auth.signOut(); location.reload(); };
+   // --- Auth handlers (Email + Google only) ---
+document.getElementById('btnMagic').onclick = async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) return alert('Enter your email');
+  const { error } = await supa.auth.signInWithOtp({ email });
+  if (error) alert(error.message);
+  else alert('Check your email for a one-time login link.');
+};
+
+document.getElementById('btnGoogle').onclick = () => {
+  supa.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+};
+
+// Sign out stays the same
+document.getElementById('btnSignOut').onclick = async () => {
+  await supa.auth.signOut();
+  location.reload();
+};
+
 
     // Time display
     setInterval(()=>{ nowEl.textContent=new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}); }, 1000);
