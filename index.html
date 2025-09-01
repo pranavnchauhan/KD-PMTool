@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Krrisp Digital – PM Tool</title>
+  <title>Krrisp Digital – Project Management</title>
   <!-- KD Brand Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Play:wght@400;700&display=swap" rel="stylesheet" />
   <!-- Charts & Graphs -->
@@ -11,11 +11,12 @@
   <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style>
     :root{ --primary:#F26426; --primaryDark:#C94E1E; --accent:#F6986E; --ok:#10b981; --danger:#EF4444; --text:#2A2A2A; --muted:#666; --border:#e2e8f0; --bg:#fff; --grad:linear-gradient(135deg,#F26426 0%,#2A2A2A 100%); }
-    *{box-sizing:border-box} body{margin:0;font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:var(--text)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:var(--text)}
     header{background:var(--grad);color:#fff;padding:16px 20px}
     .wrap{max-width:1200px;margin:0 auto}
     .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:50px;height:50px;background-image:url('https://storage.googleapis.com/msgsndr/TDiIkwElzD5qvid4IlB7/media/68b44fc0ba67b3a98cb100c4.png');background-size:contain;background-repeat:no-repeat;background-position:center}
+    .logo{width:50px;height:50px;background-image:url('https://storage.googleapis.com/msgsndr/TDiIkwElzD5qvid4IlB7/media/689ef64f1ef51bdf9e623e91.png');background-size:contain;background-repeat:no-repeat;background-position:center}
     .brand h1{font-family:'Play','Montserrat',sans-serif;font-size:1.6rem;margin:0}
     .brand .tagline{opacity:.9}
     .bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -48,6 +49,8 @@
     /* Auth Panel */
     #auth{display:none}
     #auth .panel{max-width:420px;margin:40px auto}
+    /* Error banner */
+    #err{display:none;padding:10px;background:#fee;border:1px solid #fbb;color:#900;margin:10px;border-radius:8px}
   </style>
 </head>
 <body>
@@ -68,6 +71,8 @@
       </div>
     </div>
   </header>
+
+  <div id="err"></div>
 
   <main class="wrap">
     <nav class="tabs" id="tabs"></nav>
@@ -164,13 +169,7 @@
     <section id="view-settings" class="view hidden">
       <div class="card">
         <h3>Settings</h3>
-        <p class="muted">Sign in is required. Use email magic link or GitHub. Data is stored in Supabase (Postgres) with RLS.</p>
-        <div class="row">
-          <div>
-            <label>Export all data</label>
-            <button id="btnExport2" class="btn">Export JSON</button>
-          </div>
-        </div>
+        <p class="muted">Sign in is required. Providers: Email (magic link) & Google. Data: Supabase Postgres with RLS.</p>
       </div>
     </section>
   </main>
@@ -189,35 +188,37 @@
     </div>
   </div>
 
-<!-- Auth Gate (Email + Google only) -->
-<div id="auth">
-  <div class="panel card" style="margin:0 20px">
-    <h3>Sign in to Krrisp Digital PM</h3>
-    <p class="muted">Use your work email for a magic link, or Google.</p>
-    <div class="row">
-      <div><label>Email</label><input id="authEmail" type="email" placeholder="you@krrispdigital.com.au"/></div>
-    </div>
-    <div class="row mt12">
-      <button id="btnMagic" class="btn primary">Send Magic Link</button>
-      <button id="btnGoogle" class="btn">Sign in with Google</button>
+  <!-- Auth Gate (Email + Google) -->
+  <div id="auth">
+    <div class="panel card" style="margin:0 20px">
+      <h3>Sign in to Krrisp Digital PM</h3>
+      <p class="muted">Use your work email for a magic link, or Google.</p>
+      <div class="row">
+        <div><label>Email</label><input id="authEmail" type="email" placeholder="you@krrispdigital.com.au"/></div>
+      </div>
+      <div class="row mt12">
+        <button id="btnMagic" class="btn primary">Send Magic Link</button>
+        <button id="btnGoogle" class="btn">Sign in with Google</button>
+      </div>
     </div>
   </div>
-</div>
 
-
-  <!-- Supabase Client & App Logic -->
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
+  <!-- Supabase UMD client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script>
     // =========================
     // CONFIG: Fill these in
     // =========================
-    const SUPABASE_URL = 'https://bbpnjddewowrzlwtqcoh.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJicG5qZGRld293cnpsd3RxY29oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2Mzk5ODcsImV4cCI6MjA3MjIxNTk4N30.XRS92I-KA9LbXnzCkaXGscnumQbYmY511ImrEXdOgP4';
+    const SUPABASE_URL  = 'https://YOUR_PROJECT_REF.supabase.co';
+    const SUPABASE_ANON = 'YOUR_ANON_PUBLIC_KEY';
 
-    const supa = createClient(SUPABASE_URL, SUPABASE_ANON);
+    // Create global client so DevTools can access `supa`
+    window.supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    // Tabs
+    // Tiny helper: visible error banner
+    function banner(msg){ const el=document.getElementById('err'); el.textContent=msg; el.style.display='block'; }
+
+    // Tabs/UI
     const TABS=[
       {id:'dashboard',label:'Dashboard'},
       {id:'projects',label:'Projects'},
@@ -226,147 +227,102 @@
       {id:'dependencies',label:'Dependencies'},
       {id:'settings',label:'Settings'}
     ];
-
-    // Elements
     const tabsEl=document.getElementById('tabs');
     const views=[...document.querySelectorAll('.view')];
     const nowEl=document.getElementById('now');
-
-    // Charts
-    let cStatus,cBudget,cUtil,cTimeline;
-
-    // State caches
-    let projects=[], tasks=[], subtasks=[], resources=[], deps=[];
-
-    // Auth gate
-    async function gate(){
-      const { data: { session } } = await supa.auth.getSession();
-      if(session){ document.getElementById('auth').style.display='none'; document.querySelector('main').style.display=''; init(); }
-      else { document.getElementById('auth').style.display=''; document.querySelector('main').style.display='none'; }
-    }
-
-   // --- Auth handlers (Email + Google only) ---
-document.getElementById('btnMagic').onclick = async () => {
-  const email = document.getElementById('authEmail').value.trim();
-  if (!email) return alert('Enter your email');
-  const { error } = await supa.auth.signInWithOtp({ email });
-  if (error) alert(error.message);
-  else alert('Check your email for a one-time login link.');
-};
-
-document.getElementById('btnGoogle').onclick = () => {
-  supa.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin }
-  });
-};
-
-// Sign out stays the same
-document.getElementById('btnSignOut').onclick = async () => {
-  await supa.auth.signOut();
-  location.reload();
-};
-
-
-    // Time display
     setInterval(()=>{ nowEl.textContent=new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}); }, 1000);
-
-    // Build tabs
     TABS.forEach((t,i)=>{ const b=document.createElement('button'); b.className='tab'+(i?'' :' active'); b.textContent=t.label; b.onclick=()=>switchView(t.id,b); tabsEl.appendChild(b); });
     function switchView(id,btn){ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); views.forEach(v=>v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); if(id==='dashboard') renderDashboard(); if(id==='resources') renderMatrix(); if(id==='dependencies') renderGraph(); }
 
-    // ===== CRUD functions (Supabase) =====
+    // Auth gate
+    async function gate(){
+      try{
+        const { data: { session } } = await supa.auth.getSession();
+        if(session){ document.getElementById('auth').style.display='none'; document.querySelector('main').style.display=''; init(); }
+        else { document.getElementById('auth').style.display=''; document.querySelector('main').style.display='none'; }
+      }catch(e){ banner('Auth error: '+e.message); }
+    }
+    document.getElementById('btnMagic').onclick=async()=>{
+      const email=document.getElementById('authEmail').value.trim(); if(!email) return alert('Enter your email');
+      const { error } = await supa.auth.signInWithOtp({ email }); if(error) alert(error.message); else alert('Check your email for a sign-in link.');
+    };
+    document.getElementById('btnGoogle').onclick=()=>{ supa.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin } }); };
+    document.getElementById('btnSignOut').onclick=async()=>{ await supa.auth.signOut(); location.reload(); };
+
+    // Data caches
+    let projects=[], tasks=[], subtasks=[], resources=[], deps=[];
+
+    // Fetch helpers (no joins to avoid PostgREST rel issues)
     async function fetchAll(){
-      const [prj,tsk,sub,res,dep] = await Promise.all([
-        supa.from('projects').select('*').order('created_at',{ascending:false}),
-        supa.from('tasks').select('*, projects(name)').order('created_at',{ascending:false}),
-        supa.from('subtasks').select('*').order('created_at',{ascending:false}),
-        supa.from('resources').select('*').order('created_at',{ascending:false}),
-        supa.from('dependencies').select('*').order('id',{ascending:false}),
-      ]);
-      if(prj.error||tsk.error||sub.error||res.error||dep.error){ console.error(prj.error||tsk.error||sub.error||res.error||dep.error); alert('Failed to load data. Check console.'); return; }
-      projects=prj.data; tasks=tsk.data; subtasks=sub.data; resources=res.data; deps=dep.data;
+      try{
+        const prj = await supa.from('projects').select('*').order('created_at',{ascending:false});
+        const tsk = await supa.from('tasks').select('*').order('created_at',{ascending:false});
+        const sub = await supa.from('subtasks').select('*').order('created_at',{ascending:false});
+        const res = await supa.from('resources').select('*').order('created_at',{ascending:false});
+        const dep = await supa.from('dependencies').select('*').order('id',{ascending:false});
+        const err = prj.error||tsk.error||sub.error||res.error||dep.error;
+        if(err){ banner('DB error: '+err.message); console.error(err); return false; }
+        projects=prj.data||[]; tasks=tsk.data||[]; subtasks=sub.data||[]; resources=res.data||[]; deps=dep.data||[]; return true;
+      }catch(e){ banner('JS fetch error: '+e.message); console.error(e); return false; }
     }
 
-    // Projects
-    async function createOrUpdateProject(editId){
-      const name=document.getElementById('pName').value.trim();
-      const budget=+document.getElementById('pBudget').value||0;
-      const status=document.getElementById('pStatus').value;
-      const start=document.getElementById('pStart').value||null;
-      const end=document.getElementById('pEnd').value||null;
-      if(!name) return alert('Project name required');
-      if(editId){
-        const { error } = await supa.from('projects').update({ name,budget,status,start_date:start,end_date:end }).eq('id', editId);
-        if(error) return alert(error.message);
-      } else {
-        const user = (await supa.auth.getUser()).data.user;
-        const { error } = await supa.from('projects').insert([{ name,budget,status,start_date:start,end_date:end, created_by:user?.id||null }]);
-        if(error) return alert(error.message);
-      }
-      await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); clearProjectForm();
-    }
-
-    async function deleteProject(id){ if(!confirm('Delete project?')) return; const { error } = await supa.from('projects').delete().eq('id',id); if(error) alert(error.message); await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); }
-
-    // Tasks
-    async function addTask(){
-      const project_id=document.getElementById('tProject').value; const title=document.getElementById('tTitle').value.trim(); const milestone=document.getElementById('tMilestone').value.trim(); const assignee=document.getElementById('tAssignee').value.trim(); const status=document.getElementById('tStatus').value; const due=document.getElementById('tDue').value||null;
-      if(!project_id) return alert('Select a project'); if(!title) return alert('Task title required');
-      const user=(await supa.auth.getUser()).data.user;
-      const { error } = await supa.from('tasks').insert([{ project_id,title,milestone,assignee,status,due_date:due, created_by:user?.id||null }]);
-      if(error) return alert(error.message); await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); clearTaskForm();
-    }
-    async function deleteTask(id){ if(!confirm('Delete task?')) return; const { error } = await supa.from('tasks').delete().eq('id',id); if(error) alert(error.message); await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); }
-
-    // Subtasks
-    function openSubtaskModal(taskId){ document.getElementById('subtaskModal').style.display='flex'; const t=tasks.find(x=>x.id===taskId); document.getElementById('stTask').textContent=t?.title||''; document.getElementById('subtaskModal').dataset.tid=taskId; renderSubtasks(taskId); }
-    document.getElementById('closeSubtask').onclick=()=>document.getElementById('subtaskModal').style.display='none';
-    async function addSubtask(){ const id=document.getElementById('subtaskModal').dataset.tid; const title=document.getElementById('stTitle').value.trim(); const status=document.getElementById('stStatus').value; if(!title) return; const user=(await supa.auth.getUser()).data.user; const { error } = await supa.from('subtasks').insert([{ task_id:id,title,status, created_by:user?.id||null }]); if(error) return alert(error.message); document.getElementById('stTitle').value=''; await fetchAll(); renderSubtasks(id); }
-    async function deleteSubtask(taskId, subId){ const { error }= await supa.from('subtasks').delete().eq('id', subId); if(error) alert(error.message); await fetchAll(); renderSubtasks(taskId); }
-
-    // Resources
-    async function addResource(){ const name=document.getElementById('rName').value.trim(); const role=document.getElementById('rRole').value.trim(); if(!name) return; const { error }= await supa.from('resources').insert([{ name,role }]); if(error) return alert(error.message); document.getElementById('rName').value=''; document.getElementById('rRole').value=''; await fetchAll(); renderResources(); renderMatrix(); }
-    async function deleteResource(id){ if(!confirm('Delete resource?')) return; const { error }= await supa.from('resources').delete().eq('id',id); if(error) alert(error.message); await fetchAll(); renderResources(); renderMatrix(); }
-
-    // Dependencies
-    async function addDependency(){ const from=document.getElementById('depFrom').value; const to=document.getElementById('depTo').value; if(!from||!to||from===to) return alert('Select two different tasks'); const { error }= await supa.from('dependencies').insert([{ from_task:from, to_task:to }]); if(error) return alert(error.message); await fetchAll(); renderGraph(); }
-
-    // ===== Renders =====
+    // UI helpers
     function badgeStatus(s){ if(s==='COMPLETED') return `<span class="badge b-ok">${s}</span>`; if(s==='OVERDUE') return `<span class="badge b-err">${s}</span>`; return `<span class="badge b-warn">${s}</span>`; }
+    function projNameById(id){ const p=projects.find(x=>x.id===id); return p? p.name : '—'; }
 
-    let editingProjectId=null;
-    function clearProjectForm(){ document.getElementById('pName').value=''; document.getElementById('pBudget').value='0'; document.getElementById('pStatus').value='ACTIVE'; document.getElementById('pStart').value=''; document.getElementById('pEnd').value=''; editingProjectId=null; }
-    function clearTaskForm(){ document.getElementById('tTitle').value=''; document.getElementById('tMilestone').value=''; document.getElementById('tAssignee').value=''; document.getElementById('tStatus').value='TODO'; document.getElementById('tDue').value=''; }
-
+    // Renderers
     function renderProjects(){ const tb=document.querySelector('#tblProjects tbody'); tb.innerHTML=''; projects.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${badgeStatus(p.status)}</td><td>$${Number(p.budget||0).toLocaleString('en-AU')}</td><td><span class='muted'>${p.start_date||'-'} → ${p.end_date||'-'}</span></td><td><button class='btn' data-edit='${p.id}'>Edit</button> <button class='btn' data-del='${p.id}'>Delete</button></td>`; tb.appendChild(tr); });
       tb.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{ const p=projects.find(x=>x.id===b.dataset.edit); editingProjectId=p.id; document.getElementById('pName').value=p.name; document.getElementById('pBudget').value=p.budget||0; document.getElementById('pStatus').value=p.status; document.getElementById('pStart').value=p.start_date||''; document.getElementById('pEnd').value=p.end_date||''; window.scrollTo({top:0,behavior:'smooth'}); });
-      tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.del));
-    }
+      tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.del)); }
 
     function populateProjectSelect(){ const sel=document.getElementById('tProject'); sel.innerHTML=projects.map(p=>`<option value='${p.id}'>${p.name}</option>`).join(''); }
 
-    function renderTasks(){ const tb=document.querySelector('#tblTasks tbody'); tb.innerHTML=''; tasks.forEach(t=>{ const projName=t.projects?.name || projects.find(p=>p.id===t.project_id)?.name || '—'; const subs=subtasks.filter(s=>s.task_id===t.id); const tr=document.createElement('tr'); tr.innerHTML=`<td>${projName}</td><td>${t.title}</td><td>${t.milestone||'-'}</td><td>${t.assignee||'-'}</td><td>${t.status}</td><td>${t.due_date||'-'}</td><td><button class='btn' data-st='${t.id}'>Manage (${subs.length})</button></td><td><button class='btn' data-delt='${t.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delt]').forEach(b=>b.onclick=()=>deleteTask(b.dataset.delt)); tb.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>openSubtaskModal(b.dataset.st)); }
+    function renderTasks(){ const tb=document.querySelector('#tblTasks tbody'); tb.innerHTML=''; tasks.forEach(t=>{ const subs=subtasks.filter(s=>s.task_id===t.id); const tr=document.createElement('tr'); tr.innerHTML=`<td>${projNameById(t.project_id)}</td><td>${t.title}</td><td>${t.milestone||'-'}</td><td>${t.assignee||'-'}</td><td>${t.status}</td><td>${t.due_date||'-'}</td><td><button class='btn' data-st='${t.id}'>Manage (${subs.length})</button></td><td><button class='btn' data-delt='${t.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delt]').forEach(b=>b.onclick=()=>deleteTask(b.dataset.delt)); tb.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>openSubtaskModal(b.dataset.st)); }
 
     function renderSubtasks(taskId){ const tb=document.querySelector('#tblSubtasks tbody'); tb.innerHTML=''; subtasks.filter(s=>s.task_id===taskId).forEach(st=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${st.title}</td><td>${st.status}</td><td><button class='btn' data-delst='${st.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delst]').forEach(b=>b.onclick=()=>deleteSubtask(taskId,b.dataset.delst)); }
 
     function renderResources(){ const tb=document.querySelector('#tblResources tbody'); tb.innerHTML=''; resources.forEach(r=>{ const count=tasks.filter(t=>t.assignee===r.name).length; const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.name}</td><td>${r.role||'-'}</td><td>${count}</td><td><button class='btn' data-delr='${r.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delr]').forEach(b=>b.onclick=()=>deleteResource(b.dataset.delr)); }
 
-    function renderMatrix(){ const projectsNames = projects.map(p=>p.name); const resNames=[...new Set(tasks.map(t=>t.assignee).filter(Boolean))]; let html='<table><tr><th>Resource</th>'+projectsNames.map(p=>`<th>${p}</th>`).join('')+'</tr>'; resNames.forEach(resName=>{ html+=`<tr><td><strong>${resName}</strong></td>`; projectsNames.forEach(pn=>{ const proj=projects.find(pp=>pp.name===pn); const count=tasks.filter(t=>t.assignee===resName && t.project_id===proj?.id).length; const bg=count?" style=\"background:rgba(242,100,38,.08)\"":""; html+=`<td${bg}>${count}</td>`; }); html+='</tr>'; }); html+='</table>'; document.getElementById('matrix').innerHTML=html; }
+    function renderMatrix(){ const projectNames=projects.map(p=>p.name); const resNames=[...new Set(tasks.map(t=>t.assignee).filter(Boolean))]; let html='<table><tr><th>Resource</th>'+projectNames.map(p=>`<th>${p}</th>`).join('')+'</tr>'; resNames.forEach(resName=>{ html+=`<tr><td><strong>${resName}</strong></td>`; projectNames.forEach(pn=>{ const proj=projects.find(pp=>pp.name===pn); const count=tasks.filter(t=>t.assignee===resName && t.project_id===proj?.id).length; const bg=count?" style=\"background:rgba(242,100,38,.08)\"":""; html+=`<td${bg}>${count}</td>`; }); html+='</tr>'; }); html+='</table>'; document.getElementById('matrix').innerHTML=html; }
 
-    function populateDepSelects(){ const opts=tasks.map(t=>`<option value='${t.id}'>${(projects.find(p=>p.id===t.project_id)?.name)||'—'}: ${t.title}</option>`).join(''); document.getElementById('depFrom').innerHTML=opts; document.getElementById('depTo').innerHTML=opts; }
+    function populateDepSelects(){ const opts=tasks.map(t=>`<option value='${t.id}'>${projNameById(t.project_id)}: ${t.title}</option>`).join(''); document.getElementById('depFrom').innerHTML=opts; document.getElementById('depTo').innerHTML=opts; }
 
     function renderGraph(){ const container=document.getElementById('graph'); const nodes=new vis.DataSet(tasks.map(t=>({id:t.id,label:t.title,color:(t.status==='DONE'? '#10b981' : (t.status==='IN_PROGRESS'? '#F6986E':'#F26426'))}))); const edges=new vis.DataSet(deps.map(d=>({from:d.from_task,to:d.to_task}))); new vis.Network(container,{nodes,edges},{nodes:{shape:'dot',size:16},physics:{stabilization:true}}); }
 
     function daysBetween(a,b){ if(!a||!b) return 0; return Math.max(0,Math.round((new Date(b)-new Date(a))/(1000*60*60*24))); }
+    let cStatus,cBudget,cUtil,cTimeline;
     function renderDashboard(){ const statusCounts={ACTIVE:0,COMPLETED:0,OVERDUE:0}; projects.forEach(p=>statusCounts[p.status]=(statusCounts[p.status]||0)+1); cStatus&&cStatus.destroy(); cStatus=new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:['Active','Completed','Overdue'],datasets:[{data:[statusCounts.ACTIVE||0,statusCounts.COMPLETED||0,statusCounts.OVERDUE||0],backgroundColor:['#10b981','#F26426','#EF4444']} ]},options:{plugins:{legend:{position:'bottom'}}}});
       cBudget&&cBudget.destroy(); cBudget=new Chart(document.getElementById('chartBudget'),{type:'bar',data:{labels:projects.map(p=>p.name),datasets:[{label:'Budget',data:projects.map(p=>Number(p.budget||0)),backgroundColor:'#F26426'}]},options:{scales:{y:{beginAtZero:true}}}});
       const byPerson={}; tasks.forEach(t=>{ if(!t.assignee) return; byPerson[t.assignee]=(byPerson[t.assignee]||0)+1; }); cUtil&&cUtil.destroy(); cUtil=new Chart(document.getElementById('chartUtil'),{type:'bar',data:{labels:Object.keys(byPerson),datasets:[{label:'Tasks',data:Object.values(byPerson),backgroundColor:Object.values(byPerson).map(v=> v>4?'#EF4444': v>2?'#F6986E':'#10b981')}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
       const durations=projects.map(p=>({name:p.name,duration:daysBetween(p.start_date,p.end_date)})); cTimeline&&cTimeline.destroy(); cTimeline=new Chart(document.getElementById('chartTimeline'),{type:'bar',data:{labels:durations.map(d=>d.name),datasets:[{label:'Duration (days)',data:durations.map(d=>d.duration),backgroundColor:'#F26426'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
     }
 
-    // Export JSON
-    async function exportAll(){ const dump={ projects, tasks, subtasks, resources, dependencies:deps }; const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='kdpm-export.json'; a.click(); URL.revokeObjectURL(url); }
+    // CRUD handlers
+    let editingProjectId=null;
+    async function createOrUpdateProject(editId){
+      const name=document.getElementById('pName').value.trim(); const budget=+document.getElementById('pBudget').value||0; const status=document.getElementById('pStatus').value; const start=document.getElementById('pStart').value||null; const end=document.getElementById('pEnd').value||null; if(!name) return alert('Project name required');
+      try{
+        if(editId){ const { error } = await supa.from('projects').update({ name,budget,status,start_date:start,end_date:end }).eq('id', editId); if(error) throw error; }
+        else { const user=(await supa.auth.getUser()).data.user; const { error } = await supa.from('projects').insert([{ name,budget,status,start_date:start,end_date:end, created_by:user?.id||null }]); if(error) throw error; }
+        await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); clearProjectForm();
+      }catch(e){ banner('Save project error: '+e.message); }
+    }
+    function clearProjectForm(){ document.getElementById('pName').value=''; document.getElementById('pBudget').value='0'; document.getElementById('pStatus').value='ACTIVE'; document.getElementById('pStart').value=''; document.getElementById('pEnd').value=''; editingProjectId=null; }
+    async function deleteProject(id){ if(!confirm('Delete project?')) return; try{ const { error } = await supa.from('projects').delete().eq('id',id); if(error) throw error; await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); }catch(e){ banner('Delete project error: '+e.message); }}
+
+    async function addTask(){ const project_id=document.getElementById('tProject').value; const title=document.getElementById('tTitle').value.trim(); const milestone=document.getElementById('tMilestone').value.trim(); const assignee=document.getElementById('tAssignee').value.trim(); const status=document.getElementById('tStatus').value; const due=document.getElementById('tDue').value||null; if(!project_id) return alert('Select a project'); if(!title) return alert('Task title required'); try{ const user=(await supa.auth.getUser()).data.user; const { error } = await supa.from('tasks').insert([{ project_id,title,milestone,assignee,status,due_date:due, created_by:user?.id||null }]); if(error) throw error; await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); clearTaskForm(); }catch(e){ banner('Add task error: '+e.message); }}
+    function clearTaskForm(){ document.getElementById('tTitle').value=''; document.getElementById('tMilestone').value=''; document.getElementById('tAssignee').value=''; document.getElementById('tStatus').value='TODO'; document.getElementById('tDue').value=''; }
+    async function deleteTask(id){ if(!confirm('Delete task?')) return; try{ const { error } = await supa.from('tasks').delete().eq('id',id); if(error) throw error; await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); }catch(e){ banner('Delete task error: '+e.message); }}
+
+    function openSubtaskModal(taskId){ document.getElementById('subtaskModal').style.display='flex'; const t=tasks.find(x=>x.id===taskId); document.getElementById('stTask').textContent=t?.title||''; document.getElementById('subtaskModal').dataset.tid=taskId; renderSubtasks(taskId); }
+    document.getElementById('closeSubtask').onclick=()=>document.getElementById('subtaskModal').style.display='none';
+    async function addSubtask(){ const id=document.getElementById('subtaskModal').dataset.tid; const title=document.getElementById('stTitle').value.trim(); const status=document.getElementById('stStatus').value; if(!title) return; try{ const user=(await supa.auth.getUser()).data.user; const { error } = await supa.from('subtasks').insert([{ task_id:id,title,status, created_by:user?.id||null }]); if(error) throw error; document.getElementById('stTitle').value=''; await fetchAll(); renderSubtasks(id); }catch(e){ banner('Add subtask error: '+e.message); }}
+    async function deleteSubtask(taskId, subId){ try{ const { error }= await supa.from('subtasks').delete().eq('id', subId); if(error) throw error; await fetchAll(); renderSubtasks(taskId); }catch(e){ banner('Delete subtask error: '+e.message); }}
+
+    async function addResource(){ const name=document.getElementById('rName').value.trim(); const role=document.getElementById('rRole').value.trim(); if(!name) return; try{ const { error }= await supa.from('resources').insert([{ name,role }]); if(error) throw error; document.getElementById('rName').value=''; document.getElementById('rRole').value=''; await fetchAll(); renderResources(); renderMatrix(); }catch(e){ banner('Add resource error: '+e.message); }}
+    async function deleteResource(id){ if(!confirm('Delete resource?')) return; try{ const { error }= await supa.from('resources').delete().eq('id',id); if(error) throw error; await fetchAll(); renderResources(); renderMatrix(); }catch(e){ banner('Delete resource error: '+e.message); }}
+
+    async function addDependency(){ const from=document.getElementById('depFrom').value; const to=document.getElementById('depTo').value; if(!from||!to||from===to) return alert('Select two different tasks'); try{ const { error }= await supa.from('dependencies').insert([{ from_task:from, to_task:to }]); if(error) throw error; await fetchAll(); renderGraph(); }catch(e){ banner('Add dependency error: '+e.message); }}
 
     // Events
     document.getElementById('saveProject').onclick=()=>createOrUpdateProject(editingProjectId);
@@ -374,9 +330,9 @@ document.getElementById('btnSignOut').onclick = async () => {
     document.getElementById('addSubtask').onclick=addSubtask;
     document.getElementById('addResource').onclick=addResource;
     document.getElementById('addDep').onclick=addDependency;
-    document.getElementById('btnExport').onclick=exportAll; document.getElementById('btnExport2').onclick=exportAll;
+    document.getElementById('btnExport').onclick=async()=>{ const dump={ projects,tasks,subtasks,resources,dependencies:deps }; const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='kdpm-export.json'; a.click(); URL.revokeObjectURL(url); };
 
-    // Realtime subscriptions
+    // Realtime
     function subscribeRealtime(){
       supa.channel('realtime:projects').on('postgres_changes',{event:'*',schema:'public',table:'projects'}, async()=>{ await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); renderMatrix(); }).subscribe();
       supa.channel('realtime:tasks').on('postgres_changes',{event:'*',schema:'public',table:'tasks'}, async()=>{ await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); renderMatrix(); renderGraph(); }).subscribe();
@@ -385,13 +341,12 @@ document.getElementById('btnSignOut').onclick = async () => {
       supa.channel('realtime:dependencies').on('postgres_changes',{event:'*',schema:'public',table:'dependencies'}, async()=>{ await fetchAll(); renderGraph(); }).subscribe();
     }
 
-    // Init app after auth
-    async function init(){ await fetchAll(); renderProjects(); populateProjectSelect(); renderTasks(); renderResources(); populateDepSelects(); renderMatrix(); renderGraph(); renderDashboard(); subscribeRealtime(); }
+    // Init
+    async function init(){ const ok=await fetchAll(); if(!ok) return; renderProjects(); populateProjectSelect(); renderTasks(); renderResources(); populateDepSelects(); renderMatrix(); renderGraph(); renderDashboard(); subscribeRealtime(); }
 
-    // Start gate
+    // Start
     gate();
-    // On auth state changes
-    supa.auth.onAuthStateChange((_event,_session)=>gate());
+    supa.auth.onAuthStateChange(()=>gate());
   </script>
 </body>
 </html>
