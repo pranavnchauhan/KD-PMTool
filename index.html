@@ -259,6 +259,12 @@
 
     async function addDependency(){ const from=document.getElementById('depFrom').value; const to=document.getElementById('depTo').value; if(!from||!to||from===to) return alert('Select two different tasks'); try{ const { error }= await supa.from('dependencies').insert([{ from_task:from, to_task:to }]); if(error) throw error; await fetchAll(); renderGraph(); }catch(e){ banner('Add dependency error: '+e.message); }}
 
+    // EVENT BINDINGS (this was missing previously)
+    document.getElementById('saveProject').onclick=()=>createOrUpdateProject(editingProjectId);
+    document.getElementById('addTask').onclick=addTask;
+    document.getElementById('addSubtask').onclick=addSubtask;
+    document.getElementById('addResource').onclick=addResource;
+    document.getElementById('addDep').onclick=addDependency;
     document.getElementById('btnExport').onclick=async()=>{ const dump={ projects,tasks,subtasks,resources,dependencies:deps }; const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='kdpm-export.json'; a.click(); URL.revokeObjectURL(url); };
 
     function subscribeRealtime(){ supa.channel('realtime:projects').on('postgres_changes',{event:'*',schema:'public',table:'projects'}, async()=>{ await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); renderMatrix(); }).subscribe(); supa.channel('realtime:tasks').on('postgres_changes',{event:'*',schema:'public',table:'tasks'}, async()=>{ await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); renderMatrix(); renderGraph(); }).subscribe(); supa.channel('realtime:subtasks').on('postgres_changes',{event:'*',schema:'public',table:'subtasks'}, async()=>{ await fetchAll(); }).subscribe(); supa.channel('realtime:resources').on('postgres_changes',{event:'*',schema:'public',table:'resources'}, async()=>{ await fetchAll(); renderResources(); renderMatrix(); }).subscribe(); supa.channel('realtime:dependencies').on('postgres_changes',{event:'*',schema:'public',table:'dependencies'}, async()=>{ await fetchAll(); renderGraph(); }).subscribe(); }
@@ -267,7 +273,6 @@
 
     async function gate(){ try{ const { data: { session } } = await supa.auth.getSession(); if(session){ document.getElementById('auth').style.display='none'; document.getElementById('main').style.display='block'; await init(); } else { document.getElementById('auth').style.display='block'; document.getElementById('main').style.display='none'; } }catch(e){ banner('Auth error: '+e.message); }}
 
-    // Kick off
     gate();
     supa.auth.onAuthStateChange(()=>gate());
   </script>
