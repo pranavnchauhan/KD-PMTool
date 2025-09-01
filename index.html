@@ -4,181 +4,232 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Krrisp Digital – Project Management (Supabase)</title>
+  <!-- KD Brand Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Play:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Charts & Graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style>
-    :root{ --primary:#F26426; --primaryDark:#C94E1E; --accent:#F6986E; --ok:#10b981; --danger:#EF4444; --text:#2A2A2A; --muted:#666; --border:#e2e8f0; --bg:#fff; --grad:linear-gradient(135deg,#F26426 0%,#2A2A2A 100%); }
+    /* =========================
+       KD Colour Palette (from image)
+       ========================= */
+    :root{
+      --mindaro:#C5D86D;  /* sidebar light green */
+      --licorice:#261C15; /* very dark brown */
+      --powder:#F7F7F2;  /* off-white page bg */
+      --beige:#E4E6C3;   /* soft beige cards */
+      --orange:#F05D23;  /* header orange */
+      --orangeD:#C94E1E; /* darker orange for hover */
+
+      --text:#1f1f1f;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 6px 20px rgba(0,0,0,.08);
+
+      --grad:linear-gradient(135deg, var(--orange) 0%, var(--licorice) 100%);
+    }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif;background:#fff;color:var(--text)}
-    header{background:var(--grad);color:#fff;padding:16px 20px}
+    html,body{height:100%}
+    body{margin:0;background:var(--powder);color:var(--text);font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,sans-serif}
+
+    /* Layout */
+    .app{display:grid;grid-template-columns:240px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
+    aside{grid-row:1/3;grid-column:1/2;background:var(--mindaro);border-right:2px solid rgba(0,0,0,.05);padding:18px 14px;}
+    header{grid-column:2/3;background:var(--grad);color:#fff;padding:14px 20px;}
+    main{grid-column:2/3;padding:18px 22px}
+
+    /* Sidebar */
+    .sb-brand{display:flex;align-items:center;gap:10px;margin:6px 4px 18px}
+    .logo{width:46px;height:46px;background-image:url('https://storage.googleapis.com/msgsndr/TDiIkwElzD5qvid4IlB7/media/689ef64f1ef51bdf9e623e91.png');background-size:contain;background-position:center;background-repeat:no-repeat}
+    .sb-title{font-family:'Play','Montserrat',sans-serif;font-size:1.05rem;color:#161616}
+    nav#sideNav{display:flex;flex-direction:column;gap:8px}
+    .sbtn{width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:2px solid transparent;background:transparent;color:#1d1d1d;font-weight:600;cursor:pointer}
+    .sbtn:hover{background:rgba(0,0,0,.05)}
+    .sbtn.active{background:#fff;border-color:#fff;box-shadow:var(--shadow)}
+
+    /* Header badges */
     .wrap{max-width:1200px;margin:0 auto}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:50px;height:50px;background-image:url('https://storage.googleapis.com/msgsndr/TDiIkwElzD5qvid4IlB7/media/689ef64f1ef51bdf9e623e91.png');background-size:contain;background-repeat:no-repeat;background-position:center}
-    .brand h1{font-family:'Play','Montserrat',sans-serif;font-size:1.6rem;margin:0}
-    .brand .tagline{opacity:.9}
-    .bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .pill{padding:8px 12px;border-radius:999px;border:2px solid rgba(255,255,255,.25);backdrop-filter:blur(2px)}
-    .btn{padding:10px 14px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer}
-    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-    main.wrap{padding:20px}
-    nav.tabs{display:flex;gap:8px;margin:8px 0 16px}
-    .tab{padding:10px 14px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer}
-    .tab:hover{background:rgba(242,100,38,.08);color:var(--primary)}
-    .tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .btn{padding:9px 12px;border-radius:10px;border:2px solid var(--border);background:#fff;cursor:pointer}
+    .btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+    .btn.primary:hover{background:var(--orangeD);border-color:var(--orangeD)}
+
+    /* Cards / Tables */
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .card{background:#fff;border:2px solid var(--border);border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,.06);padding:14px}
-    h2,h3{font-family:'Play','Montserrat',sans-serif;margin:0 0 10px}
+    .card{background:#fff;border:2px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:14px}
+    .card.soft{background:var(--beige)}
+    h1,h2,h3{font-family:'Play','Montserrat',sans-serif;margin:0 0 10px}
+
     label{display:block;margin:6px 0 4px;font-size:.9rem}
-    input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px}
+    input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff}
     table{width:100%;border-collapse:collapse;margin-top:8px}
-    th,td{padding:8px 10px;border:1px solid var(--border);text-align:left}
+    th,td{padding:8px 10px;border:1px solid var(--border);text-align:left;background:#fff}
     .row{display:flex;gap:10px} .row>*{flex:1}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem}
-    .b-ok{background:rgba(16,185,129,.12);color:#065f46}
-    .b-warn{background:rgba(246,152,110,.15);color:#7a3413}
-    .b-err{background:rgba(239,68,68,.12);color:#7f1d1d}
-    .muted{color:var(--muted)} .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
     .right{display:flex;justify-content:flex-end}
     .hidden{display:none}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+
+    /* Badges */
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem}
+    .b-ok{background:rgba(16,185,129,.14);color:#065f46}
+    .b-warn{background:rgba(245,93,35,.14);color:#7a2e12}
+    .b-err{background:rgba(239,68,68,.14);color:#7f1d1d}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
     .modal .panel{background:#fff;border-radius:14px;border:2px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:16px;max-width:640px;width:100%}
+
+    /* Auth */
     #auth{display:block}
     #auth .panel{max-width:420px;margin:40px auto}
     #err{display:none;padding:10px;background:#fee;border:1px solid #fbb;color:#900;margin:10px;border-radius:8px}
+
+    /* Small screens */
+    @media (max-width: 980px){ .app{grid-template-columns:1fr} aside{grid-row:auto;grid-column:auto;display:none} header,main{grid-column:1/2} .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <div class="brand">
-        <div class="logo"></div>
-        <div>
-          <h1>Krrisp Digital – Project Management</h1>
-          <div class="tagline">AI & Automation Studio</div>
+  <!-- GRID LAYOUT -->
+  <div class="app">
+    <aside>
+      <div class="sb-brand"><div class="logo"></div><div class="sb-title">Krrisp Digital PM</div></div>
+      <nav id="sideNav"></nav>
+    </aside>
+
+    <header>
+      <div class="wrap bar">
+        <div style="flex:1 1 auto;color:#fff">
+          <h2 style="margin:0;font-size:1.25rem">Krrisp Digital – Project Management</h2>
+          <div style="opacity:.9">AI & Automation Studio</div>
         </div>
-      </div>
-      <div class="bar">
         <div class="pill">Local Time: <span id="now">--:--</span></div>
         <div class="pill">Timezone: Australia/Sydney</div>
         <button id="btnExport" class="btn">Export JSON</button>
         <button id="btnSignOut" class="btn">Sign Out</button>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <div id="err"></div>
+    <main>
+      <div id="err"></div>
 
-  <!-- AUTH PANEL VISIBLE BY DEFAULT -->
-  <div id="auth">
-    <div class="panel card" style="margin:0 20px">
-      <h3>Sign in to Krrisp Digital PM</h3>
-      <p class="muted">Use your work email for a magic link, or Google.</p>
-      <div class="row">
-        <div><label>Email</label><input id="authEmail" type="email" placeholder="you@krrispdigital.com.au"/></div>
+      <!-- AUTH PANEL VISIBLE UNTIL LOGGED IN -->
+      <div id="auth" class="card soft">
+        <div class="panel" style="margin:0 auto;max-width:640px;background:transparent;border:0;box-shadow:none">
+          <h3>Sign in to Krrisp Digital PM</h3>
+          <p class="muted">Use your work email for a magic link, or Google.</p>
+          <div class="row">
+            <div><label>Email</label><input id="authEmail" type="email" placeholder="you@krrispdigital.com.au"/></div>
+          </div>
+          <div class="row mt12">
+            <button id="btnMagic" class="btn primary">Send Magic Link</button>
+            <button id="btnGoogle" class="btn">Sign in with Google</button>
+          </div>
+        </div>
       </div>
-      <div class="row mt12">
-        <button id="btnMagic" class="btn primary">Send Magic Link</button>
-        <button id="btnGoogle" class="btn">Sign in with Google</button>
-      </div>
-    </div>
+
+      <!-- MAIN APP HIDDEN UNTIL LOGGED IN -->
+      <section id="appViews" style="display:none">
+        <!-- Dashboard -->
+        <section id="view-dashboard" class="view">
+          <div class="grid">
+            <div class="card"><h3>Project Status</h3><canvas id="chartStatus" height="160"></canvas></div>
+            <div class="card"><h3>Budget by Project</h3><canvas id="chartBudget" height="160"></canvas></div>
+            <div class="card"><h3>Team Utilisation</h3><canvas id="chartUtil" height="200"></canvas></div>
+            <div class="card"><h3>Timeline (days)</h3><canvas id="chartTimeline" height="200"></canvas></div>
+          </div>
+        </section>
+
+        <!-- Projects -->
+        <section id="view-projects" class="view hidden">
+          <div class="card">
+            <h3>Add / Edit Project</h3>
+            <div class="row">
+              <div><label>Project Name</label><input id="pName" placeholder="e.g., Website Revamp" /></div>
+              <div><label>Budget ($)</label><input id="pBudget" type="number" min="0" value="0"/></div>
+              <div><label>Status</label><select id="pStatus"><option>ACTIVE</option><option>COMPLETED</option><option>OVERDUE</option></select></div>
+            </div>
+            <div class="row mt12">
+              <div><label>Start Date</label><input id="pStart" type="date"/></div>
+              <div><label>End Date</label><input id="pEnd" type="date"/></div>
+              <div class="right" style="align-items:flex-end"><button id="saveProject" class="btn primary">Save Project</button></div>
+            </div>
+          </div>
+          <div class="card mt16">
+            <h3>Projects</h3>
+            <table id="tblProjects"><thead><tr><th>Name</th><th>Status</th><th>Budget</th><th>Dates</th><th>Actions</th></tr></thead><tbody></tbody></table>
+          </div>
+        </section>
+
+        <!-- Tasks -->
+        <section id="view-tasks" class="view hidden">
+          <div class="card">
+            <h3>Add Task</h3>
+            <div class="row">
+              <div><label>Project</label><select id="tProject"></select></div>
+              <div><label>Task Title</label><input id="tTitle" placeholder="Design homepage"/></div>
+              <div><label>Milestone</label><input id="tMilestone" placeholder="M1 – Design"/></div>
+            </div>
+            <div class="row mt12">
+              <div><label>Assignee</label><input id="tAssignee" placeholder="Alice"/></div>
+              <div><label>Status</label><select id="tStatus"><option>TODO</option><option>IN_PROGRESS</option><option>DONE</option></select></div>
+              <div><label>Due Date</label><input id="tDue" type="date"/></div>
+              <div class="right" style="align-items:flex-end"><button id="addTask" class="btn primary">Add Task</button></div>
+            </div>
+          </div>
+          <div class="card mt16">
+            <h3>Tasks & Subtasks</h3>
+            <table id="tblTasks"><thead><tr><th>Project</th><th>Task</th><th>Milestone</th><th>Assignee</th><th>Status</th><th>Due</th><th>Subtasks</th><th>Actions</th></tr></thead><tbody></tbody></table>
+          </div>
+        </section>
+
+        <!-- Resources -->
+        <section id="view-resources" class="view hidden">
+          <div class="card">
+            <h3>Resources</h3>
+            <div class="row">
+              <div><label>Name</label><input id="rName" placeholder="New Resource"/></div>
+              <div><label>Role</label><input id="rRole" placeholder="Developer"/></div>
+              <div class="right" style="align-items:flex-end"><button id="addResource" class="btn primary">Add Resource</button></div>
+            </div>
+          </div>
+          <div class="card mt16">
+            <h3>Team</h3>
+            <table id="tblResources"><thead><tr><th>Name</th><th>Role</th><th>Allocated Tasks</th><th>Actions</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="card mt16">
+            <h3>Resource Allocation Matrix</h3>
+            <div id="matrix" style="overflow-x:auto"></div>
+          </div>
+        </section>
+
+        <!-- Dependencies -->
+        <section id="view-dependencies" class="view hidden">
+          <div class="grid">
+            <div class="card">
+              <h3>Add Dependency</h3>
+              <div class="row">
+                <div><label>Predecessor Task</label><select id="depFrom"></select></div>
+                <div><label>Successor Task</label><select id="depTo"></select></div>
+              </div>
+              <div class="right mt12"><button id="addDep" class="btn primary">Add Dependency</button></div>
+            </div>
+            <div class="card"><h3>Graph</h3><div id="graph" style="height:360px;border:1px solid var(--border)"></div></div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="view-settings" class="view hidden">
+          <div class="card">
+            <h3>Settings</h3>
+            <p class="muted">Providers: Email (magic link) & Google. Data: Supabase Postgres with RLS.</p>
+          </div>
+        </section>
+      </section>
+    </main>
   </div>
 
-  <!-- MAIN APP HIDDEN UNTIL LOGGED IN -->
-  <main id="main" class="wrap" style="display:none">
-    <nav class="tabs" id="tabs"></nav>
-
-    <section id="view-dashboard" class="view">
-      <div class="grid">
-        <div class="card"><h3>Project Status</h3><canvas id="chartStatus" height="160"></canvas></div>
-        <div class="card"><h3>Budget by Project</h3><canvas id="chartBudget" height="160"></canvas></div>
-        <div class="card"><h3>Team Utilisation</h3><canvas id="chartUtil" height="200"></canvas></div>
-        <div class="card"><h3>Timeline (days)</h3><canvas id="chartTimeline" height="200"></canvas></div>
-      </div>
-    </section>
-
-    <section id="view-projects" class="view hidden">
-      <div class="card">
-        <h3>Add / Edit Project</h3>
-        <div class="row">
-          <div><label>Project Name</label><input id="pName" placeholder="e.g., Website Revamp" /></div>
-          <div><label>Budget ($)</label><input id="pBudget" type="number" min="0" value="0"/></div>
-          <div><label>Status</label><select id="pStatus"><option>ACTIVE</option><option>COMPLETED</option><option>OVERDUE</option></select></div>
-        </div>
-        <div class="row mt12">
-          <div><label>Start Date</label><input id="pStart" type="date"/></div>
-          <div><label>End Date</label><input id="pEnd" type="date"/></div>
-          <div class="right" style="align-items:flex-end"><button id="saveProject" class="btn primary">Save Project</button></div>
-        </div>
-      </div>
-      <div class="card mt16">
-        <h3>Projects</h3>
-        <table id="tblProjects"><thead><tr><th>Name</th><th>Status</th><th>Budget</th><th>Dates</th><th>Actions</th></tr></thead><tbody></tbody></table>
-      </div>
-    </section>
-
-    <section id="view-tasks" class="view hidden">
-      <div class="card">
-        <h3>Add Task</h3>
-        <div class="row">
-          <div><label>Project</label><select id="tProject"></select></div>
-          <div><label>Task Title</label><input id="tTitle" placeholder="Design homepage"/></div>
-          <div><label>Milestone</label><input id="tMilestone" placeholder="M1 – Design"/></div>
-        </div>
-        <div class="row mt12">
-          <div><label>Assignee</label><input id="tAssignee" placeholder="Alice"/></div>
-          <div><label>Status</label><select id="tStatus"><option>TODO</option><option>IN_PROGRESS</option><option>DONE</option></select></div>
-          <div><label>Due Date</label><input id="tDue" type="date"/></div>
-          <div class="right" style="align-items:flex-end"><button id="addTask" class="btn primary">Add Task</button></div>
-        </div>
-      </div>
-      <div class="card mt16">
-        <h3>Tasks & Subtasks</h3>
-        <table id="tblTasks"><thead><tr><th>Project</th><th>Task</th><th>Milestone</th><th>Assignee</th><th>Status</th><th>Due</th><th>Subtasks</th><th>Actions</th></tr></thead><tbody></tbody></table>
-      </div>
-    </section>
-
-    <section id="view-resources" class="view hidden">
-      <div class="card">
-        <h3>Resources</h3>
-        <div class="row">
-          <div><label>Name</label><input id="rName" placeholder="New Resource"/></div>
-          <div><label>Role</label><input id="rRole" placeholder="Developer"/></div>
-          <div class="right" style="align-items:flex-end"><button id="addResource" class="btn primary">Add Resource</button></div>
-        </div>
-      </div>
-      <div class="card mt16">
-        <h3>Team</h3>
-        <table id="tblResources"><thead><tr><th>Name</th><th>Role</th><th>Allocated Tasks</th><th>Actions</th></tr></thead><tbody></tbody></table>
-      </div>
-      <div class="card mt16">
-        <h3>Resource Allocation Matrix</h3>
-        <div id="matrix" style="overflow-x:auto"></div>
-      </div>
-    </section>
-
-    <section id="view-dependencies" class="view hidden">
-      <div class="grid">
-        <div class="card">
-          <h3>Add Dependency</h3>
-          <div class="row">
-            <div><label>Predecessor Task</label><select id="depFrom"></select></div>
-            <div><label>Successor Task</label><select id="depTo"></select></div>
-          </div>
-          <div class="right mt12"><button id="addDep" class="btn primary">Add Dependency</button></div>
-        </div>
-        <div class="card"><h3>Graph</h3><div id="graph" style="height:360px;border:1px solid var(--border)"></div></div>
-      </div>
-    </section>
-
-    <section id="view-settings" class="view hidden">
-      <div class="card">
-        <h3>Settings</h3>
-        <p class="muted">Providers: Email (magic link) & Google. Data: Supabase Postgres with RLS.</p>
-      </div>
-    </section>
-  </main>
-
+  <!-- Subtask Modal -->
   <div class="modal" id="subtaskModal">
     <div class="panel">
       <h3>Subtasks for <span id="stTask"></span></h3>
@@ -192,32 +243,46 @@
     </div>
   </div>
 
+  <!-- Supabase UMD client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
+    // =========================
+    // CONFIG (fill with your values)
+    // =========================
     const SUPABASE_URL  = 'https://bbpnjddewowrzlwtqcoh.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJicG5qZGRld293cnpsd3RxY29oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2Mzk5ODcsImV4cCI6MjA3MjIxNTk4N30.XRS92I-KA9LbXnzCkaXGscnumQbYmY511ImrEXdOgP4';
+
     window.supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage,
-    flowType: 'pkce' // makes Google OAuth more robust
-  }
-});
+      auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:window.localStorage, flowType:'pkce' }
+    });
+
+    // Helper: error banner
     function banner(msg){ const el=document.getElementById('err'); el.textContent=msg; el.style.display='block'; }
 
-    const TABS=[{id:'dashboard',label:'Dashboard'},{id:'projects',label:'Projects'},{id:'tasks',label:'Tasks'},{id:'resources',label:'Resources'},{id:'dependencies',label:'Dependencies'},{id:'settings',label:'Settings'}];
-    const tabsEl=document.getElementById('tabs');
+    // Sidebar tabs
+    const TABS=[
+      {id:'dashboard',label:'Dashboard'},
+      {id:'projects',label:'Projects'},
+      {id:'tasks',label:'Tasks'},
+      {id:'resources',label:'Resources'},
+      {id:'dependencies',label:'Dependencies'},
+      {id:'settings',label:'Settings'}
+    ];
+    const sideNav=document.getElementById('sideNav');
     const views=[...document.querySelectorAll('.view')];
-    const nowEl=document.getElementById('now'); setInterval(()=>{ nowEl.textContent=new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}); }, 1000);
-    TABS.forEach((t,i)=>{ const b=document.createElement('button'); b.className='tab'+(i?'' :' active'); b.textContent=t.label; b.onclick=()=>switchView(t.id,b); tabsEl.appendChild(b); });
-    function switchView(id,btn){ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); views.forEach(v=>v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); if(id==='dashboard') renderDashboard(); if(id==='resources') renderMatrix(); if(id==='dependencies') renderGraph(); }
 
+    TABS.forEach((t,i)=>{ const b=document.createElement('button'); b.className='sbtn'+(i===0?' active':''); b.textContent=t.label; b.onclick=()=>switchView(t.id,b); sideNav.appendChild(b); });
+    function switchView(id,btn){ document.querySelectorAll('.sbtn').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); views.forEach(v=>v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); if(id==='dashboard') renderDashboard(); if(id==='resources') renderMatrix(); if(id==='dependencies') renderGraph(); }
+
+    // Header clock
+    const nowEl=document.getElementById('now'); setInterval(()=>{ nowEl.textContent=new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}); }, 1000);
+
+    // Auth UI
     document.getElementById('btnMagic').onclick=async()=>{ const email=document.getElementById('authEmail').value.trim(); if(!email) return alert('Enter your email'); const { error } = await supa.auth.signInWithOtp({ email }); if(error) alert(error.message); else alert('Check your email for a sign-in link.'); };
     document.getElementById('btnGoogle').onclick=()=>{ supa.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin } }); };
     document.getElementById('btnSignOut').onclick=async()=>{ await supa.auth.signOut(); location.reload(); };
 
+    // Data caches
     let projects=[], tasks=[], subtasks=[], resources=[], deps=[];
 
     async function fetchAll(){
@@ -236,19 +301,61 @@
     function badgeStatus(s){ if(s==='COMPLETED') return `<span class="badge b-ok">${s}</span>`; if(s==='OVERDUE') return `<span class="badge b-err">${s}</span>`; return `<span class="badge b-warn">${s}</span>`; }
     function projNameById(id){ const p=projects.find(x=>x.id===id); return p? p.name : '—'; }
 
+    // Renderers
     function renderProjects(){ const tb=document.querySelector('#tblProjects tbody'); tb.innerHTML=''; projects.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${badgeStatus(p.status)}</td><td>$${Number(p.budget||0).toLocaleString('en-AU')}</td><td><span class='muted'>${p.start_date||'-'} → ${p.end_date||'-'}</span></td><td><button class='btn' data-edit='${p.id}'>Edit</button> <button class='btn' data-del='${p.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{ const p=projects.find(x=>x.id===b.dataset.edit); editingProjectId=p.id; document.getElementById('pName').value=p.name; document.getElementById('pBudget').value=p.budget||0; document.getElementById('pStatus').value=p.status; document.getElementById('pStart').value=p.start_date||''; document.getElementById('pEnd').value=p.end_date||''; window.scrollTo({top:0,behavior:'smooth'}); }); tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.del)); }
-    function populateProjectSelect(){ const sel=document.getElementById('tProject'); sel.innerHTML=projects.map(p=>`<option value='${p.id}'>${p.name}</option>`).join(''); }
-    function renderTasks(){ const tb=document.querySelector('#tblTasks tbody'); tb.innerHTML=''; tasks.forEach(t=>{ const subs=subtasks.filter(s=>s.task_id===t.id); const tr=document.createElement('tr'); tr.innerHTML=`<td>${projNameById(t.project_id)}</td><td>${t.title}</td><td>${t.milestone||'-'}</td><td>${t.assignee||'-'}</td><td>${t.status}</td><td>${t.due_date||'-'}</td><td><button class='btn' data-st='${t.id}'>Manage (${subs.length})</button></td><td><button class='btn' data-delt='${t.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delt]').forEach(b=>b.onclick=()=>deleteTask(b.dataset.delt)); tb.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>openSubtaskModal(b.dataset.st)); }
-    function renderSubtasks(taskId){ const tb=document.querySelector('#tblSubtasks tbody'); tb.innerHTML=''; subtasks.filter(s=>s.task_id===taskId).forEach(st=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${st.title}</td><td>${st.status}</td><td><button class='btn' data-delst='${st.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delst]').forEach(b=>b.onclick=()=>deleteSubtask(taskId,b.dataset.delst)); }
-    function renderResources(){ const tb=document.querySelector('#tblResources tbody'); tb.innerHTML=''; resources.forEach(r=>{ const count=tasks.filter(t=>t.assignee===r.name).length; const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.name}</td><td>${r.role||'-'}</td><td>${count}</td><td><button class='btn' data-delr='${r.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delr]').forEach(b=>b.onclick=()=>deleteResource(b.dataset.delr)); }
-    function renderMatrix(){ const projectNames=projects.map(p=>p.name); const resNames=[...new Set(tasks.map(t=>t.assignee).filter(Boolean))]; let html='<table><tr><th>Resource</th>'+projectNames.map(p=>`<th>${p}</th>`).join('')+'</tr>'; resNames.forEach(resName=>{ html+=`<tr><td><strong>${resName}</strong></td>`; projectNames.forEach(pn=>{ const proj=projects.find(pp=>pp.name===pn); const count=tasks.filter(t=>t.assignee===resName && t.project_id===proj?.id).length; const bg=count?" style=\"background:rgba(242,100,38,.08)\"":""; html+=`<td${bg}>${count}</td>`; }); html+='</tr>'; }); html+='</table>'; document.getElementById('matrix').innerHTML=html; }
-    function populateDepSelects(){ const opts=tasks.map(t=>`<option value='${t.id}'>${projNameById(t.project_id)}: ${t.title}</option>`).join(''); document.getElementById('depFrom').innerHTML=opts; document.getElementById('depTo').innerHTML=opts; }
-    function renderGraph(){ const container=document.getElementById('graph'); const nodes=new vis.DataSet(tasks.map(t=>({id:t.id,label:t.title,color:(t.status==='DONE'? '#10b981' : (t.status==='IN_PROGRESS'? '#F6986E':'#F26426'))}))); const edges=new vis.DataSet(deps.map(d=>({from:d.from_task,to:d.to_task}))); new vis.Network(container,{nodes,edges},{nodes:{shape:'dot',size:16},physics:{stabilization:true}}); }
-    function daysBetween(a,b){ if(!a||!b) return 0; return Math.max(0,Math.round((new Date(b)-new Date(a))/(1000*60*60*24))); }
-    let cStatus,cBudget,cUtil,cTimeline; function renderDashboard(){ const statusCounts={ACTIVE:0,COMPLETED:0,OVERDUE:0}; projects.forEach(p=>statusCounts[p.status]=(statusCounts[p.status]||0)+1); cStatus&&cStatus.destroy(); cStatus=new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:['Active','Completed','Overdue'],datasets:[{data:[statusCounts.ACTIVE||0,statusCounts.COMPLETED||0,statusCounts.OVERDUE||0],backgroundColor:['#10b981','#F26426','#EF4444']} ]},options:{plugins:{legend:{position:'bottom'}}}}); cBudget&&cBudget.destroy(); cBudget=new Chart(document.getElementById('chartBudget'),{type:'bar',data:{labels:projects.map(p=>p.name),datasets:[{label:'Budget',data:projects.map(p=>Number(p.budget||0)),backgroundColor:'#F26426'}]},options:{scales:{y:{beginAtZero:true}}}}); const byPerson={}; tasks.forEach(t=>{ if(!t.assignee) return; byPerson[t.assignee]=(byPerson[t.assignee]||0)+1; }); cUtil&&cUtil.destroy(); cUtil=new Chart(document.getElementById('chartUtil'),{type:'bar',data:{labels:Object.keys(byPerson),datasets:[{label:'Tasks',data:Object.values(byPerson),backgroundColor:Object.values(byPerson).map(v=> v>4?'#EF4444': v>2?'#F6986E':'#10b981')}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}}); const durations=projects.map(p=>({name:p.name,duration:daysBetween(p.start_date,p.end_date)})); cTimeline&&cTimeline.destroy(); cTimeline=new Chart(document.getElementById('chartTimeline'),{type:'bar',data:{labels:durations.map(d=>d.name),datasets:[{label:'Duration (days)',data:durations.map(d=>d.duration),backgroundColor:'#F26426'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}}); }
 
+    function populateProjectSelect(){ const sel=document.getElementById('tProject'); sel.innerHTML=projects.map(p=>`<option value='${p.id}'>${p.name}</option>`).join(''); }
+
+    function renderTasks(){ const tb=document.querySelector('#tblTasks tbody'); tb.innerHTML=''; tasks.forEach(t=>{ const subs=subtasks.filter(s=>s.task_id===t.id); const tr=document.createElement('tr'); tr.innerHTML=`<td>${projNameById(t.project_id)}</td><td>${t.title}</td><td>${t.milestone||'-'}</td><td>${t.assignee||'-'}</td><td>${t.status}</td><td>${t.due_date||'-'}</td><td><button class='btn' data-st='${t.id}'>Manage (${subs.length})</button></td><td><button class='btn' data-delt='${t.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delt]').forEach(b=>b.onclick=()=>deleteTask(b.dataset.delt)); tb.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>openSubtaskModal(b.dataset.st)); }
+
+    function renderSubtasks(taskId){ const tb=document.querySelector('#tblSubtasks tbody'); tb.innerHTML=''; subtasks.filter(s=>s.task_id===taskId).forEach(st=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${st.title}</td><td>${st.status}</td><td><button class='btn' data-delst='${st.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delst]').forEach(b=>b.onclick=()=>deleteSubtask(taskId,b.dataset.delst)); }
+
+    function renderResources(){ const tb=document.querySelector('#tblResources tbody'); tb.innerHTML=''; resources.forEach(r=>{ const count=tasks.filter(t=>t.assignee===r.name).length; const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.name}</td><td>${r.role||'-'}</td><td>${count}</td><td><button class='btn' data-delr='${r.id}'>Delete</button></td>`; tb.appendChild(tr); }); tb.querySelectorAll('[data-delr]').forEach(b=>b.onclick=()=>deleteResource(b.dataset.delr)); }
+
+    function renderMatrix(){ const projectNames=projects.map(p=>p.name); const resNames=[...new Set(tasks.map(t=>t.assignee).filter(Boolean))]; let html='<table><tr><th>Resource</th>'+projectNames.map(p=>`<th>${p}</th>`).join('')+'</tr>'; resNames.forEach(resName=>{ html+=`<tr><td><strong>${resName}</strong></td>`; projectNames.forEach(pn=>{ const proj=projects.find(pp=>pp.name===pn); const count=tasks.filter(t=>t.assignee===resName && t.project_id===proj?.id).length; const bg=count?" style=\"background:rgba(197,216,109,.35)\"":""; html+=`<td${bg}>${count}</td>`; }); html+='</tr>'; }); html+='</table>'; document.getElementById('matrix').innerHTML=html; }
+
+    function populateDepSelects(){ const opts=tasks.map(t=>`<option value='${t.id}'>${projNameById(t.project_id)}: ${t.title}</option>`).join(''); document.getElementById('depFrom').innerHTML=opts; document.getElementById('depTo').innerHTML=opts; }
+
+    function renderGraph(){ const container=document.getElementById('graph'); const nodes=new vis.DataSet(tasks.map(t=>({id:t.id,label:t.title,color:(t.status==='DONE'? '#10b981' : (t.status==='IN_PROGRESS'? '#C5D86D':'#F05D23'))}))); const edges=new vis.DataSet(deps.map(d=>({from:d.from_task,to:d.to_task}))); new vis.Network(container,{nodes,edges},{nodes:{shape:'dot',size:16},physics:{stabilization:true}}); }
+
+    function daysBetween(a,b){ if(!a||!b) return 0; return Math.max(0,Math.round((new Date(b)-new Date(a))/(1000*60*60*24))); }
+
+    // Charts use KD palette
+    let cStatus,cBudget,cUtil,cTimeline;
+    function renderDashboard(){
+      const statusCounts={ACTIVE:0,COMPLETED:0,OVERDUE:0}; projects.forEach(p=>statusCounts[p.status]=(statusCounts[p.status]||0)+1);
+      cStatus&&cStatus.destroy(); cStatus=new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:['Active','Completed','Overdue'],datasets:[{data:[statusCounts.ACTIVE||0,statusCounts.COMPLETED||0,statusCounts.OVERDUE||0],backgroundColor:['#C5D86D','#10b981','#F05D23']} ]},options:{plugins:{legend:{position:'bottom'}}}});
+
+      cBudget&&cBudget.destroy(); cBudget=new Chart(document.getElementById('chartBudget'),{type:'bar',data:{labels:projects.map(p=>p.name),datasets:[{label:'Budget',data:projects.map(p=>Number(p.budget||0)),backgroundColor:'#F05D23'}]},options:{scales:{y:{beginAtZero:true}}}});
+
+      const byPerson={}; tasks.forEach(t=>{ if(!t.assignee) return; byPerson[t.assignee]=(byPerson[t.assignee]||0)+1; });
+      cUtil&&cUtil.destroy(); cUtil=new Chart(document.getElementById('chartUtil'),{type:'bar',data:{labels:Object.keys(byPerson),datasets:[{label:'Tasks',data:Object.values(byPerson),backgroundColor:Object.values(byPerson).map(v=> v>4?'#F05D23': v>2?'#E4E6C3':'#C5D86D')}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+
+      const durations=projects.map(p=>({name:p.name,duration:daysBetween(p.start_date,p.end_date)}));
+      cTimeline&&cTimeline.destroy(); cTimeline=new Chart(document.getElementById('chartTimeline'),{type:'bar',data:{labels:durations.map(d=>d.name),datasets:[{label:'Duration (days)',data:durations.map(d=>d.duration),backgroundColor:'#C5D86D'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+    }
+
+    // CRUD
     let editingProjectId=null;
-    async function createOrUpdateProject(editId){ const name=document.getElementById('pName').value.trim(); const budget=+document.getElementById('pBudget').value||0; const status=document.getElementById('pStatus').value; const start=document.getElementById('pStart').value||null; const end=document.getElementById('pEnd').value||null; if(!name) return alert('Project name required'); try{ if(editId){ const { error } = await supa.from('projects').update({ name,budget,status,start_date:start,end_date:end }).eq('id', editId); if(error) throw error; } else { const user=(await supa.auth.getUser()).data.user; const { error } = await supa.from('projects').insert([{ name,budget,status,start_date:start,end_date:end, created_by:user?.id||null }]); if(error) throw error; } await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); clearProjectForm(); }catch(e){ banner('Save project error: '+e.message); }}
+    async function createOrUpdateProject(editId){
+      const name=document.getElementById('pName').value.trim();
+      const budget=+document.getElementById('pBudget').value||0;
+      const status=document.getElementById('pStatus').value;
+      const start=document.getElementById('pStart').value||null;
+      const end=document.getElementById('pEnd').value||null;
+      if(!name) return alert('Project name required');
+      try{
+        if(editId){
+          const { error } = await supa.from('projects').update({ name,budget,status,start_date:start,end_date:end }).eq('id', editId);
+          if(error) throw error;
+        } else {
+          const user=(await supa.auth.getUser()).data.user;
+          const { error } = await supa.from('projects').insert([{ name,budget,status,start_date:start,end_date:end, created_by:user?.id||null }]);
+          if(error) throw error;
+        }
+        await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); clearProjectForm();
+      }catch(e){ banner('Save project error: '+e.message); }
+    }
     function clearProjectForm(){ document.getElementById('pName').value=''; document.getElementById('pBudget').value='0'; document.getElementById('pStatus').value='ACTIVE'; document.getElementById('pStart').value=''; document.getElementById('pEnd').value=''; editingProjectId=null; }
     async function deleteProject(id){ if(!confirm('Delete project?')) return; try{ const { error } = await supa.from('projects').delete().eq('id',id); if(error) throw error; await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); }catch(e){ banner('Delete project error: '+e.message); }}
 
@@ -266,7 +373,7 @@
 
     async function addDependency(){ const from=document.getElementById('depFrom').value; const to=document.getElementById('depTo').value; if(!from||!to||from===to) return alert('Select two different tasks'); try{ const { error }= await supa.from('dependencies').insert([{ from_task:from, to_task:to }]); if(error) throw error; await fetchAll(); renderGraph(); }catch(e){ banner('Add dependency error: '+e.message); }}
 
-    // EVENT BINDINGS (this was missing previously)
+    // Events
     document.getElementById('saveProject').onclick=()=>createOrUpdateProject(editingProjectId);
     document.getElementById('addTask').onclick=addTask;
     document.getElementById('addSubtask').onclick=addSubtask;
@@ -274,24 +381,23 @@
     document.getElementById('addDep').onclick=addDependency;
     document.getElementById('btnExport').onclick=async()=>{ const dump={ projects,tasks,subtasks,resources,dependencies:deps }; const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='kdpm-export.json'; a.click(); URL.revokeObjectURL(url); };
 
-    function subscribeRealtime(){ supa.channel('realtime:projects').on('postgres_changes',{event:'*',schema:'public',table:'projects'}, async()=>{ await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); renderMatrix(); }).subscribe(); supa.channel('realtime:tasks').on('postgres_changes',{event:'*',schema:'public',table:'tasks'}, async()=>{ await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); renderMatrix(); renderGraph(); }).subscribe(); supa.channel('realtime:subtasks').on('postgres_changes',{event:'*',schema:'public',table:'subtasks'}, async()=>{ await fetchAll(); }).subscribe(); supa.channel('realtime:resources').on('postgres_changes',{event:'*',schema:'public',table:'resources'}, async()=>{ await fetchAll(); renderResources(); renderMatrix(); }).subscribe(); supa.channel('realtime:dependencies').on('postgres_changes',{event:'*',schema:'public',table:'dependencies'}, async()=>{ await fetchAll(); renderGraph(); }).subscribe(); }
+    // Realtime
+    function subscribeRealtime(){
+      supa.channel('realtime:projects').on('postgres_changes',{event:'*',schema:'public',table:'projects'}, async()=>{ await fetchAll(); renderProjects(); populateProjectSelect(); renderDashboard(); renderMatrix(); }).subscribe();
+      supa.channel('realtime:tasks').on('postgres_changes',{event:'*',schema:'public',table:'tasks'}, async()=>{ await fetchAll(); renderTasks(); populateDepSelects(); renderDashboard(); renderMatrix(); renderGraph(); }).subscribe();
+      supa.channel('realtime:subtasks').on('postgres_changes',{event:'*',schema:'public',table:'subtasks'}, async()=>{ await fetchAll(); }).subscribe();
+      supa.channel('realtime:resources').on('postgres_changes',{event:'*',schema:'public',table:'resources'}, async()=>{ await fetchAll(); renderResources(); renderMatrix(); }).subscribe();
+      supa.channel('realtime:dependencies').on('postgres_changes',{event:'*',schema:'public',table:'dependencies'}, async()=>{ await fetchAll(); renderGraph(); }).subscribe();
+    }
 
-    async function init(){ const ok=await fetchAll(); if(!ok) return; renderProjects(); populateProjectSelect(); renderTasks(); renderResources(); populateDepSelects(); renderMatrix(); renderGraph(); renderDashboard(); subscribeRealtime(); }
+    // Init
+    async function init(){ const ok=await fetchAll(); if(!ok) return; document.getElementById('appViews').style.display='block'; renderProjects(); populateProjectSelect(); renderTasks(); renderResources(); populateDepSelects(); renderMatrix(); renderGraph(); renderDashboard(); subscribeRealtime(); }
 
-    async function gate(){ try{ const { data: { session } } = await supa.auth.getSession(); if(session){ document.getElementById('auth').style.display='none'; document.getElementById('main').style.display='block'; await init(); } else { document.getElementById('auth').style.display='block'; document.getElementById('main').style.display='none'; } }catch(e){ banner('Auth error: '+e.message); }}
+    async function gate(){ try{ const { data: { session } } = await supa.auth.getSession(); if(session){ document.getElementById('auth').style.display='none'; document.getElementById('appViews').style.display='block'; await init(); } else { document.getElementById('auth').style.display='block'; document.getElementById('appViews').style.display='none'; } }catch(e){ banner('Auth error: '+e.message); }}
 
-// Kick off (improved: wait for session restore on first load)
-(async () => {
-  // Give Supabase a tick to restore the saved session from localStorage
-  const { data: { session } } = await supa.auth.getSession();
-  await gate(); // gate() will show main if session exists, else auth panel
-})();
-
-// Keep UI in sync for any future auth changes (sign in/out/refresh)
-supa.auth.onAuthStateChange((_evt, _session) => {
-  gate();
-});
-
+    // Kick off (wait for session restore first)
+    (async()=>{ await supa.auth.getSession(); await gate(); })();
+    supa.auth.onAuthStateChange(()=>gate());
   </script>
 </body>
 </html>
