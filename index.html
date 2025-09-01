@@ -196,8 +196,15 @@
   <script>
     const SUPABASE_URL  = 'https://bbpnjddewowrzlwtqcoh.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJicG5qZGRld293cnpsd3RxY29oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2Mzk5ODcsImV4cCI6MjA3MjIxNTk4N30.XRS92I-KA9LbXnzCkaXGscnumQbYmY511ImrEXdOgP4';
-    window.supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
+    window.supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage,
+    flowType: 'pkce' // makes Google OAuth more robust
+  }
+});
     function banner(msg){ const el=document.getElementById('err'); el.textContent=msg; el.style.display='block'; }
 
     const TABS=[{id:'dashboard',label:'Dashboard'},{id:'projects',label:'Projects'},{id:'tasks',label:'Tasks'},{id:'resources',label:'Resources'},{id:'dependencies',label:'Dependencies'},{id:'settings',label:'Settings'}];
@@ -273,8 +280,18 @@
 
     async function gate(){ try{ const { data: { session } } = await supa.auth.getSession(); if(session){ document.getElementById('auth').style.display='none'; document.getElementById('main').style.display='block'; await init(); } else { document.getElementById('auth').style.display='block'; document.getElementById('main').style.display='none'; } }catch(e){ banner('Auth error: '+e.message); }}
 
-    gate();
-    supa.auth.onAuthStateChange(()=>gate());
+// Kick off (improved: wait for session restore on first load)
+(async () => {
+  // Give Supabase a tick to restore the saved session from localStorage
+  const { data: { session } } = await supa.auth.getSession();
+  await gate(); // gate() will show main if session exists, else auth panel
+})();
+
+// Keep UI in sync for any future auth changes (sign in/out/refresh)
+supa.auth.onAuthStateChange((_evt, _session) => {
+  gate();
+});
+
   </script>
 </body>
 </html>
